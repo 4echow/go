@@ -11,6 +11,8 @@ This repository contains solutions and exercises from various Go programming res
 
 - **`tour_of_go/`**: Exercises completed from the official Go Tour.
   - ...
+- **`snippetbox/`**: Implementation of the snippetbox-App from the "Let's Go" book by Alex Edwards
+  - ...
 
 ## Getting Started
 
