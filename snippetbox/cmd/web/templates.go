@@ -1,8 +1,8 @@
 package main
 
 import (
+	"html/template"
 	"path/filepath"
-	"text/template"
 	"time"
 
 	"github.com/4echow/go/snippetbox/pkg/forms"
@@ -11,6 +11,7 @@ import (
 
 type templateData struct {
 	CurrentYear int
+	Flash       string
 	Form        *forms.Form
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
