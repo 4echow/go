@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/4echow/go/snippetbox/pkg/models"
 	"github.com/justinas/nosurf"
 )
 
@@ -63,4 +66,33 @@ func noSurf(next http.Handler) http.Handler {
 	})
 
 	return csrfHandler
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check if authenticatedUserID value exists, if not call next handler in chain as normal
+		exists := app.session.Exists(r, "authenticatedUserID")
+		if !exists {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// fetch current user from DB, if no matching record/deactivated -> remove (invalid)
+		// authenticatedUserID value from session and call next handler
+		user, err := app.users.Get(app.session.GetInt(r, "authenticatedUserID"))
+		if errors.Is(err, models.ErrNoRecord) || !user.Active {
+			app.session.Remove(r, "authenticatedUserID")
+			next.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		// if none of the above, we know it's an authenticated active user
+		// create new copy of request with true boolean value added to request context
+		// call next handler with this copy
+		ctx := context.WithValue(r.Context(), contextKeyIsAuthenticated, true)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
